@@ -39,7 +39,7 @@ func (h *TodoHandler) CreateTodo(c *gin.Context) {
 		return
 	}
 	userID := c.GetInt("userID")
-	todo, err := h.Repo.Create(userID, req.Title)
+	todo, err := h.Repo.Create(userID, title)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "failed to create todo"})
 		return
@@ -103,14 +103,14 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 func (h *TodoHandler) DeleteTodo(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(400, gin.H{"error": "todo not found"})
+		c.JSON(400, gin.H{"error": "invalid id"})
 		return
 	}
 	userID := c.GetInt("userID")
 
 	todo, err := h.Repo.GetByID(id)
 	if errors.Is(err, sql.ErrNoRows) {
-		c.JSON(404, gin.H{"error": "failed to fetch todo"})
+		c.JSON(404, gin.H{"error": "todo not found"})
 		return
 	}
 	if err != nil {

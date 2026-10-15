@@ -3,6 +3,8 @@ package handler
 import (
 	"errors"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/Torrahp/todo-backend/internal/repository"
 	"github.com/Torrahp/todo-backend/internal/service"
 	"github.com/gin-gonic/gin"
@@ -28,7 +30,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(409, gin.H{"error": "email already registered"})
 		return
 	}
-	if errors.Is(err, service.ErrPasswordTooLong) {
+	if errors.Is(err, bcrypt.ErrPasswordTooLong) {
 		c.JSON(400, gin.H{"error": "Password is too long"})
 		return
 	}
@@ -36,7 +38,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
-	c.JSON(201, gin.H{"message": "Registerd"})
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to register"})
+		return
+	}
+	c.JSON(201, gin.H{"message": "Registered"})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {

@@ -15,7 +15,7 @@ func AuthRequired() gin.HandlerFunc {
 			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
 			return
 		}
-		tokenStr := strings.TrimPrefix(header, "Bearer ")// ตัดคำว่า Bearer ออกเหลือแค่ token
+		tokenStr := strings.TrimPrefix(header, "Bearer ") // ตัดคำว่า Bearer ออกเหลือแค่ token
 
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil //จะใช้Key อะไรตรวจสอบJWT
@@ -31,13 +31,13 @@ func AuthRequired() gin.HandlerFunc {
 			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
 			return
 		}
-		userID, ok := claims["user_id"].(float64)//Go ถอดรหัสJson number ลง interface{} เป็น float64
-			if !ok {
+		userID, ok := claims["user_id"].(float64) //Go ถอดรหัสJson number ลง interface{} เป็น float64
+		if !ok {
 			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
 			return
 		}
 
-		c.Set("userID", int(userID))// set userID in context for later use
-		c.Next()// ส่งต่อไปยัง handler ถัดไป
+		c.Set("userID", int(userID)) // set userID in context for later use
+		c.Next()                     // ส่งต่อไปยัง handler ถัดไป
 	}
 }
