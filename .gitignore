@@ -1,3 +1,9 @@
-*.md
-*.txt
 .env
+CLAUDE.md
+
+summary.txt
+To-Do *.md
+Phase 2*.md
+
+node_modules/
+dist/
