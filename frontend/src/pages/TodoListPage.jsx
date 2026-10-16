@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useTodos } from "../hooks/useTodos";
-import TodoForm from "../components/TodoFrom";
+import TodoForm from "../components/TodoForm";
 import TodoItem from "../components/TodoItem";
 
 function TodoListPage() {

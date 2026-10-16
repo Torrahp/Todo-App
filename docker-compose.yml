@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: todoapp
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d todoapp"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    image: migrate/migrate:v4.20.1
+    volumes:
+      - ./backend/migrations:/migrations:ro
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://postgres:${POSTGRES_PASSWORD}@db:5432/todoapp?sslmode=disable"
+      - "up"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: todoapp
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PORT: "8080"
+      CORS_ORIGIN: http://localhost:3000
+      GIN_MODE: release
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
