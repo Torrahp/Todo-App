@@ -8,11 +8,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/Torrahp/todo-backend/internal/repository"
+	"github.com/Torrahp/todo-backend/internal/model"
 )
+type TodoStore interface {
+	GetAllByUser(userID int) ([]model.Todo, error)
+	GetByID(id int) (model.Todo, error)
+	Create(userID int, title string) (model.Todo, error)
+	Update(id int, title string, isDone bool) (model.Todo, error)
+	Delete(id int) error
+}
 
 type TodoHandler struct {
-	Repo *repository.TodoRepository
+	Repo TodoStore
 }
 
 func (h *TodoHandler) GetTodos(c *gin.Context) {

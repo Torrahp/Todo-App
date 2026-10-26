@@ -10,13 +10,17 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Torrahp/todo-backend/internal/repository"
+	"github.com/Torrahp/todo-backend/internal/model"
 )
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
 
+type UserStore interface {
+	CreateUser(email string, passwordHash string) error
+	GetByEmail(email string) (model.User, error)
+}
 type AuthService struct {
-	Repo *repository.UserRepository
+	Repo UserStore
 }
 
 func (s *AuthService) Register(email, password string) error {
