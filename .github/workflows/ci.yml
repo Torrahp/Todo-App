@@ -1,7 +1,12 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
 jobs:
-  backend-test:
+  backend:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -9,17 +14,64 @@ jobs:
     services:
       postgres:
         image: postgres:16
-        env: { POSTGRES_PASSWORD: test, POSTGRES_DB: todoapp_test }
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: todoapp_test
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
+          --health-timeout 3s
           --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: test
+      DB_NAME: todoapp_test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.26"
-          cache-denpendency-path: backend/go.sum
-      - run: go vet ./...
-      - run: go test ./... -v
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - name: Vet
+        run: go vet -tags=integration ./...
+      - name: Unit tests
+        run: go test -race ./...
+      - name: Run migrations
+        run: |
+          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.20.1
+          migrate -path migrations -database "postgres://postgres:test@localhost:5432/todoapp_test?sslmode=disable" up
+      - name: Integration tests
+        run: go test -race -tags=integration ./internal/repository/...
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx vitest run
+      - run: npm run build
+
+  docker:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build all images
+        run: docker compose build
+        env:
+          POSTGRES_PASSWORD: ci-only
+          JWT_SECRET: ci-only
