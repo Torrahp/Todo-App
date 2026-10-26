@@ -10,6 +10,7 @@ import (
 
 	"github.com/Torrahp/todo-backend/internal/model"
 )
+
 type TodoStore interface {
 	GetAllByUser(userID int) ([]model.Todo, error)
 	GetByID(id int) (model.Todo, error)

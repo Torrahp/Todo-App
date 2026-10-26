@@ -12,21 +12,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type fakeTodoStore struct{
-	todos map[int]model.Todo
+type fakeTodoStore struct {
+	todos   map[int]model.Todo
 	failGet bool
 }
 
-func newFakeStore() *fakeTodoStore{
+func newFakeStore() *fakeTodoStore {
 	return &fakeTodoStore{todos: map[int]model.Todo{
 		1: {ID: 1, UserID: 1, Title: "mine"},
 		2: {ID: 2, UserID: 2, Title: "not mine"},
 	}}
 }
 
-func (f *fakeTodoStore) GetAllByUser(userID int) ([]model.Todo, error){
+func (f *fakeTodoStore) GetAllByUser(userID int) ([]model.Todo, error) {
 	out := []model.Todo{}
-	for _, t := range f.todos{
+	for _, t := range f.todos {
 		if t.UserID == userID {
 			out = append(out, t)
 		}
@@ -34,26 +34,26 @@ func (f *fakeTodoStore) GetAllByUser(userID int) ([]model.Todo, error){
 	return out, nil
 }
 
-func (f *fakeTodoStore) GetByID(id int) (model.Todo, error){
-	if f.failGet{
+func (f *fakeTodoStore) GetByID(id int) (model.Todo, error) {
+	if f.failGet {
 		return model.Todo{}, errors.New("db down")
 	}
-	t, ok := f.todos[id]// เป็นการเช็คว่าค่า f มีอยู่ในtodosไหม
+	t, ok := f.todos[id] // เป็นการเช็คว่าค่า f มีอยู่ในtodosไหม
 	if !ok {
 		return model.Todo{}, sql.ErrNoRows
 	}
 	return t, nil
 }
 
-func (f *fakeTodoStore) Create(userID int, title string) (model.Todo, error){
+func (f *fakeTodoStore) Create(userID int, title string) (model.Todo, error) {
 	t := model.Todo{
-		ID:100, UserID: userID,Title: title,
+		ID: 100, UserID: userID, Title: title,
 	}
 	f.todos[t.ID] = t
 	return t, nil
 }
 
-func (f *fakeTodoStore) Update(id int, title string, isDone bool)(model.Todo, error){
+func (f *fakeTodoStore) Update(id int, title string, isDone bool) (model.Todo, error) {
 	t, ok := f.todos[id]
 	if !ok {
 		return model.Todo{}, sql.ErrNoRows
@@ -64,17 +64,17 @@ func (f *fakeTodoStore) Update(id int, title string, isDone bool)(model.Todo, er
 	return t, nil
 }
 
-func (f *fakeTodoStore) Delete(id int)error{
+func (f *fakeTodoStore) Delete(id int) error {
 	_, ok := f.todos[id]
 	if !ok {
 		return sql.ErrNoRows
 	}
 	delete(f.todos, id)
-	
+
 	return nil
 }
 
-func setupRouter(store TodoStore) *gin.Engine{
+func setupRouter(store TodoStore) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	h := &TodoHandler{Repo: store}
 	r := gin.New()
